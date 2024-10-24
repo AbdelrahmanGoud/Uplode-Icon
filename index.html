@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>رفع أيقونة وتحويلها إلى رابط مباشر</title>
+    <link rel="icon" href="https://i.postimg.cc/501MWJ9X/Screenshot-2024-10-24-145217.jpg" type="image/png">
+    <title id="pageTitle">رفع صورة وتحويلها إلى رابط مباشر</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,34 +15,52 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
             height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .header {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .header button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            margin-left: 10px;
+        }
+        .header button:hover {
+            background-color: #218838;
+            transform: scale(1.05);
         }
         .container {
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 20px;
-            width: 300px;
+            width: 350px;
             text-align: center;
+            transition: background 0.3s;
         }
         h1 {
             font-size: 1.5em;
             margin-bottom: 20px;
         }
-        input[type="file"] {
+        input[type="file"], select, input[type="text"] {
             margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        input[type="text"] {
             width: 100%;
             padding: 10px;
-            margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            transition: border-color 0.3s;
+        }
+        input[type="file"]:hover, select:hover, input[type="text"]:hover {
+            border-color: #28a745;
         }
         button {
             background-color: #28a745;
@@ -49,49 +69,157 @@
             padding: 10px 15px;
             border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.2s;
         }
         button:hover {
             background-color: #218838;
+            transform: scale(1.05);
         }
         #linkContainer {
             display: none;
+            margin-top: 20px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            transition: opacity 0.5s;
+        }
+        img {
+            margin-top: 15px;
+            max-width: 100%;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .dark-mode {
+            background-color: #333;
+            color: white;
+        }
+        .dark-mode .container {
+            background: #444;
+            border-color: #555;
+        }
+        .dark-mode button {
+            background-color: #555;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>رفع أيقونة</h1>
-        <input type="file" id="fileInput" accept=".ico">
+    <div class="header">
+        <button id="toggleLanguage">اللغة الإنجليزية</button>
+        <button id="toggleMode">تفعيل الوضع الليلي</button>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <h1 id="title">رفع صورة</h1>
+        <input type="file" id="fileInput" accept="image/*">
+        <label for="extensionSelect" id="extensionLabel">اختر امتداد الصورة:</label>
+        <select id="extensionSelect">
+            <option value=".png">PNG</option>
+            <option value=".jpg">JPG</option>
+            <option value=".jpeg">JPEG</option>
+            <option value=".gif">GIF</option>
+            <option value=".ico">ICO</option>
+        </select>
+        <img id="imagePreview" alt="معاينة الصورة" style="display: none;">
         <div id="linkContainer">
-            <label>رابط الأيقونة (بصيغة .ico): </label>
+            <label id="linkLabel">رابط الصورة:</label>
             <input type="text" id="linkInput" readonly>
             <button id="copyButton">نسخ الرابط</button>
         </div>
     </div>
+
+    <div class="toast" id="toast">تم نسخ الرابط!</div>
 
     <script>
         const fileInput = document.getElementById('fileInput');
         const linkContainer = document.getElementById('linkContainer');
         const linkInput = document.getElementById('linkInput');
         const copyButton = document.getElementById('copyButton');
+        const extensionSelect = document.getElementById('extensionSelect');
+        const toast = document.getElementById('toast');
+        const title = document.getElementById('title');
+        const toggleLanguageButton = document.getElementById('toggleLanguage');
+        const toggleModeButton = document.getElementById('toggleMode');
+        const mainContainer = document.getElementById('mainContainer');
+        const linkLabel = document.getElementById('linkLabel');
+        const extensionLabel = document.getElementById('extensionLabel');
+        let isArabic = true;
+        let isDarkMode = false;
 
         fileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
-            if (file && file.type === 'image/x-icon') {
+            if (file) {
                 const url = URL.createObjectURL(file);
-                linkInput.value = url + ".ico"; // إضافة .ico للرابط
+                const selectedExtension = extensionSelect.value;
+                linkInput.value = url + selectedExtension;
                 linkContainer.style.display = 'block';
+                document.getElementById('imagePreview').src = url;
+                document.getElementById('imagePreview').style.display = 'block';
             } else {
-                alert('الرجاء اختيار ملف بصيغة .ico');
+                showToast(isArabic ? "الرجاء اختيار ملف صورة" : "Please select an image file");
             }
         });
 
         copyButton.addEventListener('click', () => {
             linkInput.select();
             document.execCommand('copy');
-            alert('تم نسخ الرابط!');
+            showToast(isArabic ? "تم نسخ الرابط!" : "Link copied!");
         });
+
+        toggleLanguageButton.addEventListener('click', () => {
+            isArabic = !isArabic;
+            updateLanguage();
+        });
+
+        toggleModeButton.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            toggleDarkMode();
+        });
+
+        function showToast(message) {
+            toast.innerText = message;
+            toast.style.display = 'block';
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 500);
+            }, 2000);
+        }
+
+        function updateLanguage() {
+            if (isArabic) {
+                title.innerText = "رفع صورة";
+                toggleLanguageButton.innerText = "اللغة الإنجليزية";
+                linkLabel.innerText = "رابط الصورة:";
+                copyButton.innerText = "نسخ الرابط";
+                extensionLabel.innerText = "اختر امتداد الصورة:";
+                toggleModeButton.innerText = "تفعيل الوضع الليلي";
+                document.title = "رفع صورة وتحويلها إلى رابط مباشر";
+            } else {
+                title.innerText = "Upload Image";
+                toggleLanguageButton.innerText = "Arabic Language";
+                linkLabel.innerText = "Image Link:";
+                copyButton.innerText = "Copy Link";
+                extensionLabel.innerText = "Choose Image Extension:";
+                toggleModeButton.innerText = "Enable Dark Mode";
+                document.title = "Upload Image and Convert to Direct Link";
+            }
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            mainContainer.classList.toggle('dark-mode', isDarkMode);
+            toggleModeButton.innerText = isDarkMode ? "تفعيل الوضع النهاري" : "تفعيل الوضع الليلي";
+        }
     </script>
 </body>
 </html>
