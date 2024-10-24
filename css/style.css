@@ -1,0 +1,43 @@
+/* body
+{
+  height: 100vh;   
+  display: flex;
+  justify-content: center;
+  align-items: center;   
+  flex-direction: column !important;  
+  background-color: yellow;
+}
+.flag-1
+{
+  width: 500px;
+  height: 100px;
+  background-color: black;        
+}
+.flag-2
+{
+  width: 500px;
+  height: 100px;
+  background-color: white;       
+}
+.flag-3
+{
+  width: 500px;
+  height: 100px;
+  background-color: green;       
+}
+.parint
+{
+  position: relative;        
+}
+.flag-4
+{
+   position: absolute;
+   left: 27.8%;
+   top: 35.2%;     
+   width: 300px;
+  height: 200px;
+  background-color: red;
+  clip-path: polygon(50% 0%,0% 100%,100% 100%);
+  transform: rotate(90deg);
+      
+} */
